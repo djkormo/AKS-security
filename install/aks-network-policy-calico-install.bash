@@ -165,8 +165,9 @@ then
         --disable-pod-security-policy
 
 
+   echo "ACR_NAME: $ACR_NAME"
    # create Azure Container Registry 
-   az acr create  --name $ACR_NAME --sku Basic
+   az acr create  --name $ACR_NAME --sku Basic --resource-group $AKS_RG
 
    # turn on admin account
    az acr update -n  $ACR_NAME --admin-enabled true
