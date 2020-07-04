@@ -76,6 +76,8 @@ AKS_VERSION=$(az aks get-versions -l $AKS_LOCATION --query 'orchestrators[-1].or
 AKS_NODES=2
 AKS_VM_SIZE=Standard_B2s
 
+echo "AKS_NAME: $AKS_NAME"
+echo "AKS_LOCATION: $AKS_LOCATION"
 echo "AKS_NODES: $AKS_NODES"
 echo "AKS_VERSION: $AKS_VERSION"
 echo "AKS_VM_SIZE: $AKS_VM_SIZE"
@@ -106,7 +108,7 @@ then
     # Create a virtual network and subnet
     az network vnet create \
         --resource-group $AKS_RG \
-        --name myVnet \
+        --name "vnet_$AKS_NAME" \
         --address-prefixes 10.0.0.0/8 \
         --subnet-name myAKSSubnet \
         --subnet-prefix 10.240.0.0/16
@@ -123,13 +125,13 @@ then
     sleep 15
 
     # Get the virtual network resource ID
-    VNET_ID=$(az network vnet show --resource-group $AKS_RG --name myVnet --query id -o tsv)
+    VNET_ID=$(az network vnet show --resource-group $AKS_RG --name "vnet_$AKS_NAME" --query id -o tsv)
 
     # Assign the service principal Contributor permissions to the virtual network resource
     az role assignment create --assignee $SP_ID --scope $VNET_ID --role Contributor
 
     # Get the virtual network subnet resource ID
-    SUBNET_ID=$(az network vnet subnet show --resource-group $AKS_RG --vnet-name myVnet --name myAKSSubnet --query id -o tsv)
+    SUBNET_ID=$(az network vnet subnet show --resource-group $AKS_RG --vnet-name "vnet_$AKS_NAME" --name myAKSSubnet --query id -o tsv)
 
     # Create the AKS cluster and specify the virtual network and service principal information
     # Enable network policy by using the `--network-policy` parameter
@@ -173,9 +175,7 @@ then
      # 1. Grant the AKS-generated service principal pull access to our ACR, the AKS cluster will be able to pull images of our ACR
 
     CLIENT_ID=$(az aks show -g $AKS_RG -n $AKS_NAME --query "servicePrincipalProfile.clientId" -o tsv)
-
     ACR_ID=$(az acr show -n $ACR_NAME -g $AKS_RG --query "id" -o tsv)
-
     az role assignment create --assignee $CLIENT_ID --role acrpull --scope $ACR_ID
 
 		
