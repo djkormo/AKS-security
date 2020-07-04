@@ -80,6 +80,8 @@ echo "AKS_NODES: $AKS_NODES"
 echo "AKS_VERSION: $AKS_VERSION"
 echo "AKS_VM_SIZE: $AKS_VM_SIZE"
 
+ACR_NAME="ACR_$AKS_NAME"
+
 if [ "$AKS_OPERATION" = "create" ] ;
 then
 
@@ -160,6 +162,27 @@ then
         --name $AKS_NAME \
         --disable-pod-security-policy
 
+
+   # create Azure Container Registry 
+   az acr create  --name $ACR_NAME --sku Basic
+
+   # turn on admin account
+   az acr update -n  $ACR_NAME --admin-enabled true
+
+
+     # 1. Grant the AKS-generated service principal pull access to our ACR, the AKS cluster will be able to pull images of our ACR
+
+    CLIENT_ID=$(az aks show -g $AKS_RG -n $AKS_NAME --query "servicePrincipalProfile.clientId" -o tsv)
+
+    ACR_ID=$(az acr show -n $ACR_NAME -g $AKS_RG --query "id" -o tsv)
+
+    az role assignment create --assignee $CLIENT_ID --role acrpull --scope $ACR_ID
+
+		
+     # 2. Grant for Azure Devops to push to ACR 	
+    registryPassword=$(az ad sp create-for-rbac -n $ACR_NAME-push --scopes $ACR_ID --role acrpush --query password -o tsv)
+    registryName=$(az acr show -n $ACR_NAME -g $AKS_RG --query name)
+    registryLogin=$(az ad sp show --id http://$ACR_NAME-push --query appId -o tsv)
 
 fi # of create
 
