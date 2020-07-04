@@ -8,7 +8,7 @@
 # -g aks-rg
 # set your name and resource group
 
-# aks-network-policy-calico-install.bash -n aks-security2020 -g rg-aks -l northeurope, -o create
+# aks-network-policy-calico-install.bash -n aks-security2020 -g rg-aks -l northeurope -o create
 
 me="$(basename "$(test -L "$0" && readlink "$0" || echo "$0")")"
 
@@ -69,9 +69,9 @@ else
       echo "\$AKS_LOCATION is NOT empty"
 fi
 
-az aks get-versions -l $LOCATION #--query 'orchestrators[-1].orchestratorVersion' -o tsv
+az aks get-versions -l $AKS_LOCATION #--query 'orchestrators[-1].orchestratorVersion' -o tsv
 
-AKS_VERSION=$(az aks get-versions -l $LOCATION --query 'orchestrators[-1].orchestratorVersion' -o tsv)
+AKS_VERSION=$(az aks get-versions -l $AKS_LOCATION --query 'orchestrators[-1].orchestratorVersion' -o tsv)
 
 AKS_NODES=2
 AKS_VM_SIZE=Standard_B2s
@@ -99,11 +99,11 @@ then
     az provider register --namespace Microsoft.ContainerService
 
     # Create a resource group
-    az group create --name $RESOURCE_GROUP_NAME --location $LOCATION
+    az group create --name $AKS_RG --location $AKS_LOCATION
 
     # Create a virtual network and subnet
     az network vnet create \
-        --resource-group $RESOURCE_GROUP_NAME \
+        --resource-group $AKS_RG \
         --name myVnet \
         --address-prefixes 10.0.0.0/8 \
         --subnet-name myAKSSubnet \
@@ -121,19 +121,19 @@ then
     sleep 15
 
     # Get the virtual network resource ID
-    VNET_ID=$(az network vnet show --resource-group $RESOURCE_GROUP_NAME --name myVnet --query id -o tsv)
+    VNET_ID=$(az network vnet show --resource-group $AKS_RG --name myVnet --query id -o tsv)
 
     # Assign the service principal Contributor permissions to the virtual network resource
     az role assignment create --assignee $SP_ID --scope $VNET_ID --role Contributor
 
     # Get the virtual network subnet resource ID
-    SUBNET_ID=$(az network vnet subnet show --resource-group $RESOURCE_GROUP_NAME --vnet-name myVnet --name myAKSSubnet --query id -o tsv)
+    SUBNET_ID=$(az network vnet subnet show --resource-group $AKS_RG --vnet-name myVnet --name myAKSSubnet --query id -o tsv)
 
     # Create the AKS cluster and specify the virtual network and service principal information
     # Enable network policy by using the `--network-policy` parameter
     az aks create \
-        --resource-group $RESOURCE_GROUP_NAME \
-        --name $CLUSTER_NAME \
+        --resource-group $AKS_RG \
+        --name $AKS_NAME \
         --vm-set-type AvailabilitySet \
         --enable-addons monitoring \
         --kubernetes-version $AKS_VERSION \
@@ -149,15 +149,15 @@ then
         --client-secret $SP_PASSWORD \
         --network-policy calico
 
-
+    # turn on psp
     az aks update \
-        --resource-group $RESOURCE_GROUP_NAME \
-        --name $CLUSTER_NAME \
+        --resource-group $AKS_RG \
+        --name $AKS_NAME \
         --enable-pod-security-policy
-
+    # turn off psp
     az aks update \
-        --resource-group $RESOURCE_GROUP_NAME \
-        --name $CLUSTER_NAME \
+        --resource-group $AKS_RG \
+        --name $AKS_NAME \
         --disable-pod-security-policy
 
 
