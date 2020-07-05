@@ -82,7 +82,7 @@ echo "AKS_NODES: $AKS_NODES"
 echo "AKS_VERSION: $AKS_VERSION"
 echo "AKS_VM_SIZE: $AKS_VM_SIZE"
 
-ACR_NAME="ACR$AKS_NAME"
+ACR_NAME="acr2020security$RND"
 
 if [ "$AKS_OPERATION" = "create" ] ;
 then
