@@ -185,6 +185,15 @@ then
     registryName=$(az acr show -n $ACR_NAME -g $AKS_RG --query name)
     registryLogin=$(az ad sp show --id http://$ACR_NAME-push --query appId -o tsv)
 
+    # 3. Add public static IP for ingress controller     
+    RG_VM_POOL=$(az aks show -g $RESOURCE_GROUP_NAME -n $CLUSTER_NAME --query nodeResourceGroup -o tsv)
+    echo $RG_VM_POOL
+    az network public-ip create --resource-group $RG_VM_POOL --name myIngressPublicIP \
+      --dns-name myingress --sku Standard --allocation-method static --query publicIp.ipAddress -o tsv
+
+    az network public-ip list --resource-group $RG_VM_POOL --query "[?name=='myIngressPublicIP'].[dnsSettings.fqdn]" -o tsv
+
+
 fi # of create
 
 
@@ -233,6 +242,6 @@ if [ "$AKS_OPERATION" = "delete" ] ;
 then
   echo "AKS cluster deleting ";
   az aks delete --name $AKS_NAME --resource-group $AKS_RG
-  
+  az acr delete --name $ACR_NAME --resource-group $AKS_RG
 fi 
 
