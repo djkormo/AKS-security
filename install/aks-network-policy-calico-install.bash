@@ -186,7 +186,7 @@ then
     registryLogin=$(az ad sp show --id http://$ACR_NAME-push --query appId -o tsv)
 
     # 3. Add public static IP for ingress controller     
-    RG_VM_POOL=$(az aks show -g $RESOURCE_GROUP_NAME -n $CLUSTER_NAME --query nodeResourceGroup -o tsv)
+    RG_VM_POOL=$(az aks show -g $AKS_RG -n $AKS_NAME --query nodeResourceGroup -o tsv)
     echo $RG_VM_POOL
     az network public-ip create --resource-group $RG_VM_POOL --name myIngressPublicIP \
       --dns-name myingress --sku Standard --allocation-method static --query publicIp.ipAddress -o tsv
