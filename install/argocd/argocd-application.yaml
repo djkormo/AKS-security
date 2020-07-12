@@ -1,0 +1,13 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-application
+spec:
+  destination:
+    namespace: argocd
+    server: https://kubernetes.default.svc
+  source:
+    path: install/argocd/
+    repoURL: 'https://github.com/djkormo/AKS-security.git'
+    targetRevision: HEAD
+  project: default
