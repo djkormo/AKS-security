@@ -47,8 +47,7 @@ ingress.extensions/argocd-server-ingress created
 
 Browse at
 
-http://myingress.northeurope.cloudapp.azure.com/argocd
-
+kube
 
 argocd login localhost:8080
 
