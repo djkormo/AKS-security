@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: sock-shop
+  name: php-hello-application
 spec:
   destination:
     namespace: default
